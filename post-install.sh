@@ -158,6 +158,10 @@ apt install -y gnome-shell-extensions-extra gnome-shell-extension-appindicator g
 gnome-shell-extension-dash-to-panel gnome-shell-extension-dashtodock gnome-shell-extension-desktop-icons-ng \
 gnome-shell-extension-gpaste gnome-shell-extension-manager gnome-shell-extension-prefs
 
+echo "Nettoyage..."
+apt autoremove -y
+sudo -u "$USERNAME" update-desktop-database ~/.local/share/applications
+
 EXTENSIONS=(
   "dash-to-panel@jderose9.github.com"
   "removable-drive-menu@gnome-shell-extensions.gcampax.github.com"
@@ -173,9 +177,5 @@ for EXT in "${EXTENSIONS[@]}"; do
   sudo -u "$USERNAME" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u "$USERNAME")/bus" \
     gnome-extensions enable "$EXT"
 done
-
-echo "Nettoyage..."
-apt autoremove -y
-sudo -u "$USERNAME" update-desktop-database ~/.local/share/applications
 
 echo "Terminé ! Un redémarrage est nécéssaire pour finaliser l’installation."
