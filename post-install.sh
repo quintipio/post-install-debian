@@ -114,7 +114,7 @@ echo "Souhaitez-vous installer Steam, Lutris, ou Visual Studio Code via Flatpak 
 for fapp in "${FLATPAK_APPS[@]}"; do
   read -p "Installer $(basename "$fapp") ? [y/n] " yn
   if [[ "$yn" == "y" || "$yn" == "Y" ]]; then
-    sudo -u "$USERNAME" flatpak install -y flathub "$fapp"
+    flatpak install -y flathub "$fapp"
   fi
 done
 
@@ -197,6 +197,6 @@ sudo -u "$USERNAME" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u "$USER
 
 echo "Nettoyage..."
 apt autoremove -y
-sudo -u "$USERNAME" update-desktop-database ~/.local/share/applications
+sudo -u "$USERNAME" update-desktop-database /home/$USERNAME/.local/share/applications
 
 echo "Terminé ! Un redémarrage est nécéssaire pour finaliser l’installation. Si le bureau est gnome, une fois le redémarrage effectué, il faut se rendre dans l'application extension pour activer les extensions gnome."
