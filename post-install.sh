@@ -21,6 +21,13 @@ select USERNAME in $USERS; do
   fi
 done
 
+# Choix de l'environnement de bureau
+echo "Choisissez l'environnement de bureau à installer :"
+echo "1 - GNOME"
+echo "2 - XFCE"
+echo "3 - Les deux"
+read -p "Choix : " DESKTOP_CHOICE
+
 # Variables
 DEBIAN_CODENAME="$(lsb_release -sc)"
 
@@ -29,61 +36,97 @@ apt update && apt upgrade -y
 
 echo "Ajout des dépôts contrib, non-free et non-free-firmware..."
 sed -i "s/main/main contrib non-free non-free-firmware/g" /etc/apt/sources.list
-
-echo "Ajout du dépôt backports directement dans sources.list..."
 echo "deb http://deb.debian.org/debian $DEBIAN_CODENAME-backports main contrib non-free non-free-firmware" >> /etc/apt/sources.list
 
-echo "Ajout de l'architecture i386 pour compatibilité multi-arch..."
+echo "Ajout de l'architecture i386..."
 dpkg --add-architecture i386
 
-echo "Mise à jour des dépôts avec backports..."
+echo "Mise à jour des dépôts..."
 apt update
 
-echo "Installation des paquets essentiels..."
-apt install -y \
-    gnome-software gnome-software-plugin-flatpak \
-    flatpak wget curl git neofetch htop unzip \
-    gimp vlc okular pdfarranger audacity gcompris-qt mtools \
-    lutris thunderbird nextcloud-desktop \
-    hedgewars youtubedl-gui \
-    yaru-theme-gtk yaru-theme-icon yaru-theme-sound \
-    python3-pip \
-    gnome-shell-extension-manager \
-    plymouth plymouth-themes \
-    gparted system-config-printer printer-driver-all printer-driver-cups-pdf \
-    remmina hplip util-linux util-linux-extra ttf-mscorefonts-installer \
-    lm-sensors gnome-shell-extension-dashtodock gnome-shell-extension-appindicator \
-    libavcodec-extra bpytop  mpv mesa-opencl-icd bash-completion vulkan-tools vainfo \
-    libdvd-pkg libdvdcss2 libdvdnav4 libdvdread8 \
-    gstreamer1.0-libav gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
-    tree ncdu rsync zip rar unrar p7zip-full p7zip-rar \
-    net-tools nmap traceroute dnsutils tmux bat exa lsd fzf  file jq xclip xsel colordiff moreutils \
-    nano micro geany imagemagick libreoffice libreoffice-l10n-fr hunspell-fr \
-    fonts-noto fonts-noto-color-emoji fonts-cantarell fonts-dejavu fonts-liberation
+# Paquets essentiels communs
+ESSENTIAL_PACKAGES="
+gnome-software gnome-software-plugin-flatpak
+flatpak wget curl git neofetch htop unzip simple-scan
+gimp vlc numlockx mtools thunderbird
+python3-pip plymouth plymouth-themes
+gparted system-config-printer printer-driver-all printer-driver-cups-pdf
+hplip util-linux util-linux-extra ttf-mscorefonts-installer
+lm-sensors
+libavcodec-extra bpytop mpv mesa-opencl-icd bash-completion vulkan-tools vainfo
+libdvd-pkg libdvdcss2 libdvdnav4 libdvdread8
+gstreamer1.0-libav gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly
+tree ncdu rsync zip rar unrar p7zip-full p7zip-rar
+net-tools nmap traceroute dnsutils tmux bat exa lsd fzf file jq xclip xsel colordiff moreutils
+nano micro geany imagemagick libreoffice libreoffice-l10n-fr hunspell-fr
+fonts-noto fonts-noto-color-emoji fonts-cantarell fonts-dejavu fonts-liberation
+yaru-theme-gtk yaru-theme-icon yaru-theme-sound
+"
 
+# GNOME
+if [[ "$DESKTOP_CHOICE" == "1" || "$DESKTOP_CHOICE" == "3" ]]; then
+  DESKTOP_PACKAGES_GNOME="
+  gnome-shell-extension-manager
+  gnome-shell-extensions-extra gnome-shell-extension-appindicator gnome-shell-extension-arc-menu
+  gnome-shell-extension-dash-to-panel gnome-shell-extension-dashtodock
+  gnome-shell-extension-desktop-icons-ng gnome-shell-extension-gpaste gnome-shell-extension-prefs"
+fi
+
+# XFCE
+if [[ "$DESKTOP_CHOICE" == "2" || "$DESKTOP_CHOICE" == "3" ]]; then
+  DESKTOP_PACKAGES_XFCE="
+  lightdm-settings gnome-control-center xfce4-goodies lxappearance dconf-editor"
+fi
+
+echo "Installation des paquets..."
+apt install -y $ESSENTIAL_PACKAGES $DESKTOP_PACKAGES_GNOME $DESKTOP_PACKAGES_XFCE
+
+echo "Configuration de libdvd-pkg..."
 sudo dpkg-reconfigure libdvd-pkg
 
-# Configuration de Plymouth
+# GRUB et Plymouth
+echo "Configuration de Plymouth..."
 sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"/' /etc/default/grub
 sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/' /etc/default/grub
 sudo update-grub
 
-echo "Ajout de Flathub à Flatpak..."
+echo "Ajout de Flathub..."
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
-# Installation de Steam via Flatpak
-echo "Installation de Steam via Flatpak..."
-flatpak install -y flathub com.valvesoftware.Steam
+# Installation de paquets optionnels
+OPTIONAL_APPS=(
+  "okular" "pdfarranger" "audacity" "gcompris-qt"
+  "nextcloud-desktop" "hedgewars" "youtubedl-gui"
+)
+FLATPAK_APPS=(
+  "com.valvesoftware.Steam" "com.visualstudio.code" "net.lutris.Lutris"
+)
 
-# Installation de Visual Studio Code via Flatpak
-echo "Installation de Visual Studio Code via Flatpak..."
-flatpak install -y flathub com.visualstudio.code
+echo "Souhaitez-vous installer les paquets applicatifs optionnels suivants ?"
+for app in "${OPTIONAL_APPS[@]}"; do
+  read -p "Installer $app ? [y/n] " yn
+  if [[ "$yn" == "y" || "$yn" == "Y" ]]; then
+    apt install -y "$app"
+  fi
+done
 
-# Installation de TeamViewer via téléchargement
-echo "Installation de TeamViewer..."
-wget -O /tmp/teamviewer.deb https://download.teamviewer.com/download/linux/teamviewer_amd64.deb
-apt install -y /tmp/teamviewer.deb
-rm /tmp/teamviewer.deb
+echo "Souhaitez-vous installer Steam, Lutris, ou Visual Studio Code via Flatpak ?"
+for fapp in "${FLATPAK_APPS[@]}"; do
+  read -p "Installer $(basename "$fapp") ? [y/n] " yn
+  if [[ "$yn" == "y" || "$yn" == "Y" ]]; then
+    sudo -u "$USERNAME" flatpak install -y flathub "$fapp"
+  fi
+done
+
+# TeamViewer (question ajoutée)
+read -p "Souhaitez-vous installer TeamViewer ? [y/n] " install_teamviewer
+if [[ "$install_teamviewer" == "y" || "$install_teamviewer" == "Y" ]]; then
+  echo "Installation de TeamViewer..."
+  wget -O /tmp/teamviewer.deb https://download.teamviewer.com/download/linux/teamviewer_amd64.deb
+  apt install -y /tmp/teamviewer.deb
+  rm /tmp/teamviewer.deb
+fi
+
 
 echo "Ajout de $USERNAME au groupe sudo..."
 sudo usermod -aG sudo "$USERNAME"
@@ -152,30 +195,8 @@ sudo -u "$USERNAME" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u "$USER
 echo "Configuration du raccourci clavier Super+E pour ouvrir le dossier personnel..."
 sudo -u "$USERNAME" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u "$USERNAME")/bus" gsettings set org.gnome.settings-daemon.plugins.media-keys home "['<Super>e']"
 
-#Installation des extensions gnomes
-echo "Activation des extensions GNOME..."
-apt install -y gnome-shell-extensions-extra gnome-shell-extension-appindicator gnome-shell-extension-arc-menu \
-gnome-shell-extension-dash-to-panel gnome-shell-extension-dashtodock gnome-shell-extension-desktop-icons-ng \
-gnome-shell-extension-gpaste gnome-shell-extension-manager gnome-shell-extension-prefs
-
 echo "Nettoyage..."
 apt autoremove -y
 sudo -u "$USERNAME" update-desktop-database ~/.local/share/applications
 
-EXTENSIONS=(
-  "dash-to-panel@jderose9.github.com"
-  "removable-drive-menu@gnome-shell-extensions.gcampax.github.com"
-  "arcmenu@arcmenu.com"
-  "desktop-icons-ng@gnome-shell-extensions.gcampax.github.com"
-  "gpaste@gnome-shell-extensions.gcampax.github.com"
-  "no-overview-at-startup@fthx"
-  "workspace-indicator@gnome-shell-extensions.gcampax.github.com"
-)
-
-for EXT in "${EXTENSIONS[@]}"; do
-  echo "Activation de l'extension : $EXT"
-  sudo -u "$USERNAME" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u "$USERNAME")/bus" \
-    gnome-extensions enable "$EXT"
-done
-
-echo "Terminé ! Un redémarrage est nécéssaire pour finaliser l’installation."
+echo "Terminé ! Un redémarrage est nécéssaire pour finaliser l’installation. Si le bureau est gnome, une fois le redémarrage effectué, il faut se rendre dans l'application extension pour activer les extensions gnome."
