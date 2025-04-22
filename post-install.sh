@@ -75,7 +75,8 @@ fi
 # XFCE
 if [[ "$DESKTOP_CHOICE" == "2" || "$DESKTOP_CHOICE" == "3" ]]; then
   DESKTOP_PACKAGES_XFCE="
-  lightdm-settings gnome-control-center xfce4-goodies lxappearance dconf-editor"
+  lightdm-settings gnome-control-center xfce4-goodies lxappearance dconf-editor xfce4-appmenu-plugin xfce4-indicator-plugin 
+  xfce4-mount-plugin xfce4-mpc-plugin xfce4-panel-profiles xfce4-sntray-plugin xfce4-sntray-plugin-common xfce4-windowck-plugin"
 fi
 
 echo "Installation des paquets..."
