@@ -90,9 +90,10 @@ dpkg-reconfigure unattended-upgrades
 
 echo " Écriture de la configuration dans /etc/apt/apt.conf.d/50unattended-upgrades..."
 UNATTENDED_UPGRADES_CONF='Unattended-Upgrade::Allowed-Origins {
-    "Debian stable";
-    "Debian bookworm-security";
-    "Debian bookworm-updates";
+        "${distro_id}:${distro_codename}";
+        "${distro_id}:${distro_codename}-updates";
+        "${distro_id}:${distro_codename}-security";
+        "${distro_id}:${distro_codename}-backports";
 };
 Unattended-Upgrade::Automatic-Reboot "true";
 Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
@@ -103,8 +104,8 @@ echo "$UNATTENDED_UPGRADES_CONF" | tee /etc/apt/apt.conf.d/50unattended-upgrades
 echo " Écriture de la configuration dans /etc/apt/apt.conf.d/20auto-upgrades..."
 AUTO_UPGRADES_CONF='APT::Periodic::Update-Package-Lists "1";
 APT::Periodic::Download-Upgradeable-Packages "1";
+APT::Periodic::AutocleanInterval "7";
 APT::Periodic::Unattended-Upgrade "1";
-APT::Periodic::AutocleanInterval "7";'
 
 echo "$AUTO_UPGRADES_CONF" | tee /etc/apt/apt.conf.d/20auto-upgrades > /dev/null
 
