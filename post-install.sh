@@ -60,7 +60,7 @@ tree ncdu rsync zip rar unrar p7zip-full p7zip-rar
 net-tools nmap traceroute dnsutils tmux bat exa lsd fzf file jq xclip xsel colordiff moreutils
 nano micro geany imagemagick libreoffice libreoffice-l10n-fr hunspell-fr
 fonts-noto fonts-noto-color-emoji fonts-cantarell fonts-dejavu fonts-liberation
-yaru-theme-gtk yaru-theme-icon yaru-theme-sound unattended-upgrades apt-listchanges
+yaru-theme-gtk yaru-theme-icon yaru-theme-sound unattended-upgrades apt-listchanges ufw gufw
 "
 
 # GNOME
@@ -86,28 +86,11 @@ echo "Configuration de libdvd-pkg..."
 sudo dpkg-reconfigure libdvd-pkg
 
 echo "Activation du service de mises à jour automatiques..."
-dpkg-reconfigure unattended-upgrades
+sudo dpkg-reconfigure unattended-upgrades
 
-echo " Écriture de la configuration dans /etc/apt/apt.conf.d/50unattended-upgrades..."
-UNATTENDED_UPGRADES_CONF='Unattended-Upgrade::Allowed-Origins {
-        "${distro_id}:${distro_codename}";
-        "${distro_id}:${distro_codename}-updates";
-        "${distro_id}:${distro_codename}-security";
-        "${distro_id}:${distro_codename}-backports";
-};
-Unattended-Upgrade::Automatic-Reboot "true";
-Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
-Unattended-Upgrade::Remove-Unused-Dependencies "true";'
-
-echo "$UNATTENDED_UPGRADES_CONF" | tee /etc/apt/apt.conf.d/50unattended-upgrades > /dev/null
-
-echo " Écriture de la configuration dans /etc/apt/apt.conf.d/20auto-upgrades..."
-AUTO_UPGRADES_CONF='APT::Periodic::Update-Package-Lists "1";
-APT::Periodic::Download-Upgradeable-Packages "1";
-APT::Periodic::AutocleanInterval "7";
-APT::Periodic::Unattended-Upgrade "1";
-
-echo "$AUTO_UPGRADES_CONF" | tee /etc/apt/apt.conf.d/20auto-upgrades > /dev/null
+echo "Activation du parefeu"
+sudo systemctl enable ufw
+sudo systemctl start ufw
 
 # GRUB et Plymouth
 echo "Configuration de Plymouth..."
